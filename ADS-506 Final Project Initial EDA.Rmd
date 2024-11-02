@@ -1,0 +1,112 @@
+---
+title: "ADS-506 Final Project Initial EDA"
+author: "Anna"
+date: "2024-11-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Importing the data
+bike_data <- read.csv("C:/Users/annas/Downloads/Bike Sharing Data/day.csv")
+```
+
+```{r}
+# Getting summary statistics
+summary(bike_data)
+```
+
+```{r}
+# Exploring unique values in categorical columns
+lapply(bike_data[c("season", "mnth", "weekday")], unique)
+```
+
+
+```{r}
+# Converting dteday to Date type and extract year, month, or day
+bike_data$dteday <- as.Date(bike_data$dteday)
+```
+
+```{r}
+# Lets plot a trends over time
+library(ggplot2)
+ggplot(bike_data, aes(x = dteday, y = cnt)) +
+  geom_line(color='blue') +
+  labs(title = "Bike Rentals Over Time", x = "Date", y = "Total Count")
+```
+
+```{r}
+# Visualizing distribution of rentals by season and month
+ggplot(bike_data, aes(x = as.factor(season), y = cnt)) +
+  geom_boxplot(color='blue') +
+  labs(title = "Bike Rentals by Season", x = "Season", y = "Total Count")
+```
+
+
+```{r}
+# Visualizing rental distribution by weather or temperature
+ggplot(bike_data, aes(x = temp, y = cnt)) +
+  geom_point(color='blue') +
+  labs(title = "Bike Rentals vs Temperature", x = "Temperature", y = "Total Count")
+```
+
+
+```{r}
+# showing how numeric variables relate to rentals
+cor(bike_data[, sapply(bike_data, is.numeric)])
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
