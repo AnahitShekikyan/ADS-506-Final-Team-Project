@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 # Importing the data
-bike_data <- read.csv("C:/Users/annas/Downloads/Bike Sharing Data/day.csv")
+bike_data <- read.csv("day.csv")
 ```
 
 ```{r}
@@ -34,10 +34,25 @@ bike_data$dteday <- as.Date(bike_data$dteday)
 # Lets plot a trends over time
 library(ggplot2)
 ggplot(bike_data, aes(x = dteday, y = cnt)) +
-  geom_line(color='blue') +
-  labs(title = "Bike Rentals Over Time", x = "Date", y = "Total Count")
-```
+    geom_line(color = "blue") +
+    labs(title = "Bike Rental Counts Over Time",
+         x = "Date",
+         y = "Total Rentals (cnt)") +
+    theme_minimal() +  # Use a cleaner theme with grid lines
+    theme(panel.grid.major.x = element_line(color = "grey", linetype = "dashed"))
 
+
+```
+```{r smooth(1)}
+library(zoo)
+bike_data$moving_avg <- rollmean(bike_data$cnt, k = 7, fill = NA)  # 7-day moving average
+ggplot(bike_data, aes(x = dteday)) +
+    geom_line(aes(y = cnt), color = "#12023a20") +
+    geom_line(aes(y = moving_avg), color = "red", linetype = "dashed") +
+    labs(title = "Bike Rental Counts Over Time with Moving Average",
+         x = "Date",
+         y = "Total Rentals (cnt)")
+```
 ```{r}
 # Visualizing distribution of rentals by season and month
 ggplot(bike_data, aes(x = as.factor(season), y = cnt)) +
@@ -61,37 +76,80 @@ cor(bike_data[, sapply(bike_data, is.numeric)])
 
 
 ```{r}
+library(forecast)
+# Convert to time series object
+bike_ts <- ts(bike_data$cnt, frequency = 365, start = c(2011, 1))
+# Decompose the series
+decomposition <- stl(bike_ts, s.window = "periodic")
+plot(decomposition)
 
 ```
 
 
 ```{r}
+library(dplyr)
+library(ggplot2)
+
+bike_data$month <- format(as.Date(bike_data$dteday), "%m")
+monthly_avg <- bike_data %>%
+    group_by(month) %>%
+    summarise(avg_cnt = mean(cnt))
+
+ggplot(monthly_avg, aes(x = month, y = avg_cnt)) +
+    geom_bar(stat = "identity", fill = "#ff0000") +
+    labs(title = "Average Bike Rentals by Month",
+         x = "Month", y = "Average Rentals") +
+    theme_minimal()
 
 ```
 
 
 ```{r}
+bike_data$weekday <- format(as.Date(bike_data$dteday), "%A")
+weekday_avg <- bike_data %>%
+    group_by(weekday) %>%
+    summarise(avg_cnt = mean(cnt)) %>%
+    arrange(factor(weekday, levels = c("Monday", "Tuesday", "Wednesday", 
+                                       "Thursday", "Friday", "Saturday", "Sunday")))
+
+ggplot(weekday_avg, aes(x = weekday, y = avg_cnt)) +
+    geom_bar(stat = "identity", fill = "lightgreen") +
+    labs(title = "Average Bike Rentals by Day of the Week",
+         x = "Day of the Week", y = "Average Rentals") +
+    theme_minimal()
 
 ```
 
 
 ```{r}
+bike_data_hourly <- read.csv("/Users/gabrielmancillas/Documents/GitHub/ADS-506-Final-Team-Project/hour.csv")
+bike_data_hourly$hour <- as.factor(bike_data_hourly$hr)
+
+hourly_avg <- bike_data_hourly %>%
+    group_by(hour) %>%
+    summarise(avg_cnt = mean(cnt))
+
+ggplot(hourly_avg, aes(x = hour, y = avg_cnt)) +
+    geom_line(group = 1, color = "purple") +
+    labs(title = "Average Bike Rentals by Hour of the Day",
+         x = "Hour", y = "Average Rentals") +
+    theme_minimal()
 
 ```
 
 
 ```{r}
-
+acf(bike_data$cnt, main = "Autocorrelation of Bike Rentals")
+pacf(bike_data$cnt, main = "Partial Autocorrelation of Bike Rentals")
 ```
 
 
 ```{r}
-
-```
-
-
-```{r}
-
+library(forecast)
+fourier_terms <- fourier(ts(bike_data$cnt, frequency = 365), K = 2)
+fit <- auto.arima(bike_data$cnt, xreg = fourier_terms)
+forecast_fit <- forecast(fit, xreg = fourier_terms, h = 365)
+autoplot(forecast_fit)
 ```
 
 
